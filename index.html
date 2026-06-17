@@ -114,7 +114,7 @@
   .tile.locked{opacity:.6}
   .tile-wrap{position:relative;display:block}
   .tile-wrap .tile{width:100%;box-sizing:border-box}
-  .tile-menu{position:absolute;top:10px;right:10px;z-index:10;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:2px 8px;font-size:16px;cursor:pointer;line-height:1.4;backdrop-filter:blur(4px)}
+  .tile-menu{position:absolute;bottom:10px;right:10px;z-index:10;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:2px 8px;font-size:16px;cursor:pointer;line-height:1.4;backdrop-filter:blur(4px)}
   .tile-menu:hover{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
   .tile.today{border-color:rgba(40,180,99,.55);background:linear-gradient(135deg,rgba(40,180,99,.14),rgba(255,255,255,.8))}
   .tile.today .badge{background:var(--green)}
@@ -1255,7 +1255,7 @@ function homeCard(target,t,d,c){
     <div class="ico" style="background:linear-gradient(135deg,${c}33,${c}11)">${target==="quizzes"?"✓":target==="resumos"?"📄":"⬆"}</div>
     <div class="ttl">${t}</div><div class="sub">${d}</div></button>`;
 }
-function countAllQuestions(){ let n=0; for(const d in DB){ if(!DB[d].topics)continue; for(const t in DB[d].topics) n+=DB[d].topics[t].questions.length; } return n; }
+function countAllQuestions(){ let n=0; for(const d in DB){ if(!DB[d].topics)continue; for(const t in DB[d].topics) n+=(DB[d].topics[t].questions||[]).length; } for(const d in state.custom.topics){ for(const t in state.custom.topics[d]) n+=(state.custom.topics[d][t].questions||[]).length; } return n; }
 function calcStreak(){
   if(!state.sessions.length) return 0;
   const days = new Set(state.sessions.map(s=> new Date(s.ts).toDateString()));
