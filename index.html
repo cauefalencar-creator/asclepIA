@@ -1093,8 +1093,13 @@ function boot(){
   let profs=getProfiles(); if(!profs.find(p=>p.email===e)){ profs.push({email:e, name:e.split("@")[0], createdTs:Date.now()}); saveProfiles(profs); }
   updateProfileChip();
   document.querySelectorAll("[data-nav]").forEach(b=> b.classList.toggle("active", b.dataset.nav===nav));
-  render();
-  syncFromCloud();
+  if(cloudEnabled() && !(state && state._ts)){
+    view.innerHTML=`<div class="view" style="display:flex;align-items:center;justify-content:center;min-height:60vh"><div style="text-align:center"><div style="font-size:36px;margin-bottom:12px">☁️</div><div style="font-weight:700;font-size:18px">Carregando seus dados da nuvem…</div></div></div>`;
+    syncFromCloud().then(()=>{ if(!state){ state=freshState(); } render(); });
+  } else {
+    render();
+    syncFromCloud();
+  }
 }
 function renderLogin(){
   const profs=getProfiles();
