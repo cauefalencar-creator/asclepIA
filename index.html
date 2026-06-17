@@ -112,8 +112,8 @@
   .tile.add{align-items:center;justify-content:center;text-align:center;border-style:dashed;background:rgba(255,255,255,.45);color:#3a1d52}
   .tile.add .ico{background:rgba(255,255,255,.6)}
   .tile.locked{opacity:.6}
-  .tile-wrap{position:relative;display:contents}
-  .tile-wrap .tile{width:100%}
+  .tile-wrap{position:relative;display:block}
+  .tile-wrap .tile{width:100%;box-sizing:border-box}
   .tile-menu{position:absolute;top:10px;right:10px;z-index:10;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:2px 8px;font-size:16px;cursor:pointer;line-height:1.4;backdrop-filter:blur(4px)}
   .tile-menu:hover{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
   .tile.today{border-color:rgba(40,180,99,.55);background:linear-gradient(135deg,rgba(40,180,99,.14),rgba(255,255,255,.8))}
@@ -1891,6 +1891,8 @@ async function generateWithAI(){
     const tid=topId||uid("top");
     state.custom.topics[disc]=state.custom.topics[disc]||{};
     state.custom.topics[disc][tid]={ name:topicName, summary:parsed.summary||("## "+topicName), tips:parsed.tips||"", questions:qs };
+    // remove documento que foi usado para gerar
+    if(_lastFile){ const nm=_lastFile.name; const doc=state.documents.find(d=>d.name===nm); if(doc){ if(doc.stored)idbDel(doc.id); state.documents=state.documents.filter(d=>d.id!==doc.id); } }
     save(); busy(""); _lastFile=null;
     if($("#fileInput")) $("#fileInput").value="";
     openModal(`<h3>✨ Pronto!</h3><p class="muted">Gerei <b>${qs.length} questões</b> e um resumo para <b>${esc(topicName)}</b> em ${esc(discName(disc))}. Já estão disponíveis em Quizzes e Resumos.</p><div class="row" style="margin-top:14px"><button class="btn primary" onclick="closeModal();setNav('quizzes')">Ir para os Quizzes</button><button class="btn ghost" onclick="closeModal()">Fechar</button></div>`);
