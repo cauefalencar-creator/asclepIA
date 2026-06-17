@@ -1783,7 +1783,8 @@ function renderDocumentos(){
         <div style="border-top:1px solid rgba(0,0,0,.08);margin-top:14px;padding-top:14px">
           <p class="muted" style="font-size:13px;margin-bottom:10px">✨ Após anexar um PDF ou .txt, clique em <b>Gerar</b> para criar o resumo e as questões automaticamente.</p>
           <div class="row" style="align-items:center;gap:12px">
-            <button class="btn primary" id="aiGenBtn" onclick="generateWithAI()">✨ Gerar</button>
+            <button class="btn primary" id="aiGenBtn" disabled style="opacity:.45;cursor:not-allowed" title="Geração pausada temporariamente">✨ Gerar (pausado)</button>
+            <span class="muted" style="font-size:12px">⚠️ Geração pausada — reativa semana que vem</span>
             <span class="muted" id="aiStatus" style="font-size:13px"></span>
           </div>
         </div>
