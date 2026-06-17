@@ -1326,7 +1326,7 @@ function browseCrumbs(mode){
   const c=[]; c.push(`<button onclick="route={};render()">${mode==='quizzes'?'Quizzes':'Resumos'}</button>`);
   if(route.cyc){ const cyc=state.tree.find(x=>x.id===route.cyc); c.push('<span class="sep">›</span><button onclick="route={cyc:\''+route.cyc+'\'};render()">'+esc(cyc.name)+'</button>'); }
   if(route.year){ const cyc=state.tree.find(x=>x.id===route.cyc); const y=cyc.years.find(x=>x.id===route.year); c.push('<span class="sep">›</span><button onclick="route={cyc:\''+route.cyc+'\',year:\''+route.year+'\'};render()">'+esc(y.name)+'</button>'); }
-  if(route.disc){ c.push('<span class="sep">›</span><button>'+esc(discName(route.disc))+'</button>'); }
+  if(route.disc){ c.push('<span class="sep">›</span><button onclick="route={cyc:\''+route.cyc+'\',year:\''+route.year+'\',disc:\''+route.disc+'\'};render()">'+esc(discName(route.disc))+'</button>'); }
   return `<div class="crumbs">${c.join("")}</div>`;
 }
 
