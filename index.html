@@ -112,6 +112,10 @@
   .tile.add{align-items:center;justify-content:center;text-align:center;border-style:dashed;background:rgba(255,255,255,.45);color:#3a1d52}
   .tile.add .ico{background:rgba(255,255,255,.6)}
   .tile.locked{opacity:.6}
+  .tile-wrap{position:relative;display:contents}
+  .tile-wrap .tile{width:100%}
+  .tile-menu{position:absolute;top:10px;right:10px;z-index:10;background:rgba(255,255,255,.85);border:1px solid rgba(0,0,0,.1);border-radius:8px;padding:2px 8px;font-size:16px;cursor:pointer;line-height:1.4;backdrop-filter:blur(4px)}
+  .tile-menu:hover{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.12)}
   .tile.today{border-color:rgba(40,180,99,.55);background:linear-gradient(135deg,rgba(40,180,99,.14),rgba(255,255,255,.8))}
   .tile.today .badge{background:var(--green)}
   .empty{padding:40px;text-align:center;color:var(--muted)}
@@ -1275,13 +1279,13 @@ function browseCrumbs(mode){
 function renderBrowse(mode){
   // nível 0: ciclos
   if(!route.cyc){
-    const tiles = state.tree.map(cyc=>tile(cyc.name, (cyc.years.length)+" ano(s)", "🎓", `route={cyc:'${cyc.id}'};render()`)).join("");
+    const tiles = state.tree.map(cyc=>tile(cyc.name, (cyc.years.length)+" ano(s)", "🎓", `route={cyc:'${cyc.id}'};render()`, null, false, menuBtn(`askDelete('cycle','${cyc.id}','${esc(cyc.name)}')`))).join("");
     return `<div class="tilegrid">${tiles}${addTile("Novo ciclo", "openCreate('cycle')")}</div>`;
   }
   const cyc = state.tree.find(x=>x.id===route.cyc);
   // nível 1: anos
   if(!route.year){
-    const tiles = cyc.years.map(y=>tile(y.name, y.disciplines.length+" disciplina(s)", "📅", `route={cyc:'${route.cyc}',year:'${y.id}'};render()`)).join("");
+    const tiles = cyc.years.map(y=>tile(y.name, y.disciplines.length+" disciplina(s)", "📅", `route={cyc:'${route.cyc}',year:'${y.id}'};render()`, null, false, menuBtn(`askDelete('year','${cyc.id}|${y.id}','${esc(y.name)}')`))).join("");
     return `<div class="tilegrid">${tiles}${addTile("Novo ano", `openCreate('year','${cyc.id}')`)}</div>`;
   }
   const year = cyc.years.find(x=>x.id===route.year);
@@ -1289,7 +1293,7 @@ function renderBrowse(mode){
   if(!route.disc){
     const tiles = year.disciplines.map(did=>{
       const tops = Object.keys(getTopics(did)).length;
-      return tile(discName(did), tops?tops+" aula(s)":"vazio — adicione materiais", "📚", `route={cyc:'${route.cyc}',year:'${route.year}',disc:'${did}'};render()`, tops?null:"");
+      return tile(discName(did), tops?tops+" aula(s)":"vazio — adicione materiais", "📚", `route={cyc:'${route.cyc}',year:'${route.year}',disc:'${did}'};render()`, tops?null:"", false, menuBtn(`askDelete('disc','${route.cyc}|${route.year}|${did}','${esc(discName(did))}')`))
     }).join("");
     return `<div class="tilegrid">${tiles}${addTile("Nova disciplina", `openCreate('disc','${cyc.id}|${year.id}')`)}</div>`;
   }
@@ -1304,9 +1308,9 @@ function renderBrowse(mode){
     if(mode==="quizzes"){
       const last=LS[route.disc+"|"+tid]; const today=isToday(last);
       const sub = (qn? qn+" questões":"sem questões ainda") + (last?` · ${today?"feito hoje ✓":"visto em "+fmtDate(last)}`:"");
-      return quizTile(tp.name, sub, qn, `startSetup('${route.disc}','${tid}')`, today);
+      return quizTile(tp.name, sub, qn, `startSetup('${route.disc}','${tid}')`, today, menuBtn(`askDelete('topic','${route.disc}|${tid}','${esc(tp.name)}')`));
     }else{
-      return tile(tp.name, hasSummary?"Resumo disponível":"sem resumo ainda", "📄", hasSummary?`openResumo('${route.disc}','${tid}')`:`toast('Esta aula ainda não tem resumo.')`, null, hasSummary?false:true);
+      return tile(tp.name, hasSummary?"Resumo disponível":"sem resumo ainda", "📄", hasSummary?`openResumo('${route.disc}','${tid}')`:`toast('Esta aula ainda não tem resumo.')`, null, hasSummary?false:true, menuBtn(`askDelete('topic','${route.disc}|${tid}','${esc(tp.name)}')`));
     }
   }).join("");
   if(!ids.length) tiles = `<div class="empty card">Nenhum material nesta disciplina ainda.<br>Vá em <b>Envio de documentos</b> para adicionar.</div>`;
@@ -1321,16 +1325,17 @@ function renderBrowse(mode){
   }
   return `<div class="tilegrid">${agg}${tiles}${addTile("Nova aula/tópico", `openCreate('topic','${route.disc}')`)}</div>`;
 }
-function tile(ttl,sub,ico,onclick,badge,locked){
-  return `<button class="tile ${locked?'locked':''}" onclick="${onclick}">
+function tile(ttl,sub,ico,onclick,badge,locked,deleteBtn){
+  return `<div class="tile-wrap"><button class="tile ${locked?'locked':''}" onclick="${onclick}">
     ${badge!=null?`<span class="badge">${badge}</span>`:""}
-    <div class="ico">${ico}</div><div class="ttl">${esc(ttl)}</div><div class="sub">${esc(sub)}</div></button>`;
+    <div class="ico">${ico}</div><div class="ttl">${esc(ttl)}</div><div class="sub">${esc(sub)}</div></button>${deleteBtn||""}</div>`;
 }
 function addTile(label,onclick){ return `<button class="tile add" onclick="${onclick}"><div class="ico">＋</div><div class="ttl">${esc(label)}</div></button>`; }
-function quizTile(ttl,sub,qn,onclick,today){
-  return `<button class="tile ${qn?'':'locked'} ${today?'today':''}" onclick="${qn?onclick:"toast('Esta aula ainda não tem questões.')"}">
+function menuBtn(onclick){ return `<button class="tile-menu" onclick="event.stopPropagation();${onclick}">⋯</button>`; }
+function quizTile(ttl,sub,qn,onclick,today,deleteBtn){
+  return `<div class="tile-wrap"><button class="tile ${qn?'':'locked'} ${today?'today':''}" onclick="${qn?onclick:"toast('Esta aula ainda não tem questões.')"}">
     ${qn?`<span class="badge">${today?'✓':qn}</span>`:""}
-    <div class="ico">🧠</div><div class="ttl">${esc(ttl)}</div><div class="sub">${esc(sub)}</div></button>`;
+    <div class="ico">🧠</div><div class="ttl">${esc(ttl)}</div><div class="sub">${esc(sub)}</div></button>${deleteBtn||""}</div>`;
 }
 
 function renderQuizzesHub(){
@@ -1898,6 +1903,32 @@ async function generateWithAI(){
 /* ============================================================
    Criação de itens (ciclo/ano/disciplina/tópico)
    ============================================================ */
+function askDelete(kind, ctx, name){
+  openModal(`<h3>Apagar "${esc(name)}"?</h3><p class="muted">Esta ação não pode ser desfeita.</p><div class="row" style="margin-top:14px"><button class="btn ghost" onclick="closeModal()">Cancelar</button><button class="btn primary" style="background:#e53e3e" onclick="doDelete('${kind}','${ctx}')">Apagar</button></div>`);
+}
+function doDelete(kind, ctx){
+  closeModal();
+  if(kind==='topic'){
+    const [disc,tid]=ctx.split('|');
+    if(state.custom.topics[disc]) delete state.custom.topics[disc][tid];
+    // remove from semiologia too if present
+    if(DB.semiologia && DB.semiologia.topics) delete DB.semiologia.topics[tid];
+  } else if(kind==='disc'){
+    const [cycId,yearId,did]=ctx.split('|');
+    const cyc=state.tree.find(x=>x.id===cycId); if(!cyc) return;
+    const yr=cyc.years.find(x=>x.id===yearId); if(!yr) return;
+    yr.disciplines=yr.disciplines.filter(x=>x!==did);
+    if(state.custom.topics[did]) delete state.custom.topics[did];
+    if(state.custom.discs) delete state.custom.discs[did];
+  } else if(kind==='year'){
+    const [cycId,yearId]=ctx.split('|');
+    const cyc=state.tree.find(x=>x.id===cycId); if(!cyc) return;
+    cyc.years=cyc.years.filter(x=>x.id!==yearId);
+  } else if(kind==='cycle'){
+    state.tree=state.tree.filter(x=>x.id!==ctx);
+  }
+  save(); render();
+}
 function openCreate(kind, ctx){
   let title, fields="";
   if(kind==="cycle"){ title="Novo ciclo"; fields=`<div class="field"><label>Nome do ciclo</label><input class="input" id="cName" placeholder="Ex.: Ciclo Clínico"></div>`; }
@@ -1924,7 +1955,7 @@ function closeModal(){ $("#modalBg").classList.remove("show"); }
 $("#modalBg").addEventListener("click",e=>{ if(e.target.id==="modalBg") closeModal(); });
 
 /* ---------- expose for inline handlers ---------- */
-Object.assign(window,{setNav,render,startSetup,beginQuiz,renderSetup,pick,prevQ,nextQ,skipQ,confirmEnd,endQuiz,openResumo,openResumoFrom,openCreate,doCreate,closeModal,fillUpTopics,handleFiles,downloadDoc,removeDoc,openCreateTopicForUpload,resetProgress,doReset,renderHistorico,toggleSession,askDeleteSession,doDeleteSession,askClearHistory,doClearHistory,boot,doLogin,loginAs,switchProfile,logout,openProfileMenu,exportProfile,copyEl,openImport,importFromCode,applyImport,openAIConfig,saveAIConfig,generateWithAI,route:null});
+Object.assign(window,{setNav,render,startSetup,beginQuiz,renderSetup,pick,prevQ,nextQ,skipQ,confirmEnd,endQuiz,openResumo,openResumoFrom,openCreate,doCreate,closeModal,fillUpTopics,handleFiles,downloadDoc,removeDoc,openCreateTopicForUpload,resetProgress,doReset,renderHistorico,toggleSession,askDeleteSession,doDeleteSession,askClearHistory,doClearHistory,boot,doLogin,loginAs,switchProfile,logout,openProfileMenu,exportProfile,copyEl,openImport,importFromCode,applyImport,openAIConfig,saveAIConfig,generateWithAI,askDelete,doDelete,route:null});
 Object.defineProperty(window,"route",{get:()=>route,set:v=>{route=v;}});
 
 /* ---------- boot ---------- */
