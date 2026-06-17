@@ -1866,7 +1866,7 @@ async function generateWithAI(){
       tools:[tool], tool_choice:{type:"tool",name:"salvar_material"},
       messages:[{role:"user",content:[docBlock,{type:"text",text:`Gere o resumo e ${n} questões a partir deste material.`}]}] };
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{
-      "content-type":"application/json","x-api-key":cfg.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"
+      "content-type":"application/json","x-api-key":cfg.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true","anthropic-beta":"output-128k-2025-02-19"
     },body:JSON.stringify(body)});
     if(!res.ok){ let m=""; try{ const e=await res.json(); m=(e.error&&e.error.message)||""; }catch(_){}
       if(res.status===401) m="Chave da API inválida. Confira em Configurar IA.";
