@@ -45,7 +45,8 @@
     background:rgba(255,255,255,.12);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);
     border-right:1px solid var(--line);overflow-y:auto}
   .brand{display:flex;align-items:center;gap:12px;padding:6px 10px 18px}
-  .brand .logo{width:42px;height:42px;border-radius:13px;background:var(--grad);display:grid;place-items:center;color:#fff;font:700 22px Georgia,serif;box-shadow:var(--shadow-sm)}
+  .brand .logo{width:42px;height:42px;border-radius:13px;overflow:hidden;display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+  .brand .logo img{width:100%;height:100%;object-fit:cover}
   .brand .name{font-weight:800;font-size:22px;letter-spacing:-.03em;color:#fff;text-shadow:0 1px 10px rgba(80,20,90,.25)}
   .brand .name b{font-weight:800}
   .brand .tag{font-size:11px;color:rgba(255,255,255,.85);font-weight:600;letter-spacing:.02em}
@@ -201,7 +202,8 @@
   body.guest .app{grid-template-columns:1fr}
   .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
   .login-card{width:min(440px,100%);text-align:center}
-  .login-logo{width:60px;height:60px;border-radius:17px;background:var(--grad);display:grid;place-items:center;color:#fff;font:700 30px Georgia,serif;margin:0 auto 14px;box-shadow:var(--shadow-sm)}
+  .login-logo{width:60px;height:60px;border-radius:17px;overflow:hidden;display:grid;place-items:center;margin:0 auto 14px;box-shadow:var(--shadow-sm)}
+  .login-logo img{width:100%;height:100%;object-fit:cover}
   .profile-chip{margin-top:auto;padding-top:10px}
   .pchip-btn{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);cursor:pointer;background:rgba(255,255,255,.16);border-radius:14px;padding:8px 10px;color:#fff;text-align:left;transition:.16s}
   .pchip-btn:hover{background:rgba(255,255,255,.28)}
@@ -244,7 +246,7 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="logo">A</div>
+      <div class="logo"><img src="icone.png" alt="asclepIA"></div>
       <div>
         <div class="name">asclep<b>IA</b></div>
         <div class="tag">ESTUDOS EM MEDICINA</div>
@@ -1104,7 +1106,7 @@ function boot(){
 function renderLogin(){
   const profs=getProfiles();
   view.innerHTML = `<div class="login-wrap"><div class="card login-card">
-    <div class="login-logo">A</div>
+    <div class="login-logo"><img src="icone.png" alt="asclepIA"></div>
     <h1 style="font-size:27px;margin-bottom:2px">asclep<span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">IA</span></h1>
     <p class="muted" style="margin-bottom:18px">${cloudEnabled()?"Entre com seu e-mail. Seu progresso é salvo na nuvem e segue você em qualquer aparelho.":"Entre com seu e-mail para acessar seus estudos. Cada perfil guarda o próprio progresso neste aparelho."}</p>
     ${profs.length?`<div class="field" style="text-align:left"><label>Perfis neste aparelho</label><div class="row">${profs.map(p=>`<button class="btn ghost sm" onclick="loginAs('${esc(p.email)}')">${esc(p.name||p.email)}</button>`).join("")}</div></div>`:""}
