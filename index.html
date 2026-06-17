@@ -1874,8 +1874,9 @@ async function generateWithAI(){
       else if(res.status===400 && /credit|balance|insufficient/i.test(m)) m="Créditos insuficientes na sua conta da API.";
       throw new Error(m||("Erro HTTP "+res.status)); }
     const data=await res.json();
+    console.log("API response:", JSON.stringify(data).slice(0,2000));
     const toolUse=(data.content||[]).find(b=>b.type==="tool_use"&&b.name==="salvar_material");
-    if(!toolUse) throw new Error("A IA não retornou um formato válido. Tente novamente.");
+    if(!toolUse) throw new Error("Resposta: "+JSON.stringify(data).slice(0,300));
     const parsed=toolUse.input;
     const qs=(parsed.questions||[]).filter(q=>q&&q.q&&Array.isArray(q.o)&&q.o.length>=2).map(q=>{
       const o=q.o.slice(0,4).map(x=>String(x)); let a=parseInt(q.a,10); if(isNaN(a)||a<0||a>=o.length)a=0;
