@@ -1775,13 +1775,14 @@ function allDisciplineIds(){
   state.tree.forEach(c=>c.years.forEach(y=>y.disciplines.forEach(d=>set.add(d))));
   return [...set];
 }
+let _lastFile=null;
 function wireDrop(){
   const drop=$("#drop"), inp=$("#fileInput"); if(!drop)return;
   drop.onclick=()=>inp.click();
-  inp.onchange=()=>handleFiles(inp.files);
+  inp.onchange=()=>{ if(inp.files[0]) _lastFile=inp.files[0]; handleFiles(inp.files); };
   ["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
   ["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
-  drop.addEventListener("drop",e=>handleFiles(e.dataTransfer.files));
+  drop.addEventListener("drop",e=>{ const files=e.dataTransfer.files; if(files[0]) _lastFile=files[0]; handleFiles(files); });
 }
 async function handleFiles(files){
   const disc=$("#upDisc").value, top=$("#upTop").value;
@@ -1835,10 +1836,10 @@ async function generateWithAI(){
   const disc=$("#upDisc").value;
   const topId=$("#upTop").value;
   const topicName=topId ? (getTopic(disc,topId)||{}).name||topId : "";
-  const f=($("#fileInput")||{}).files && $("#fileInput").files[0];
+  const f=_lastFile;
   if(!topicName){ toast("Selecione ou crie uma aula primeiro."); return; }
   if(!f){ toast("Anexe um arquivo PDF ou .txt primeiro."); return; }
-  if(f && !["pdf","txt","md"].includes((f.name.split(".").pop()||"").toLowerCase())){ toast("Use um arquivo PDF ou .txt."); return; }
+  if(!["pdf","txt","md"].includes((f.name.split(".").pop()||"").toLowerCase())){ toast("Use um arquivo PDF ou .txt."); return; }
   const n=cfg.n||25, model=cfg.model||"claude-opus-4-8";
   const btn=$("#aiGenBtn"), st=$("#aiStatus");
   const busy=(t)=>{ if(btn)btn.disabled=!!t; if(st)st.textContent=t||""; };
@@ -1883,7 +1884,7 @@ async function generateWithAI(){
     const tid=topId||uid("top");
     state.custom.topics[disc]=state.custom.topics[disc]||{};
     state.custom.topics[disc][tid]={ name:topicName, summary:parsed.summary||("## "+topicName), tips:parsed.tips||"", questions:qs };
-    save(); busy("");
+    save(); busy(""); _lastFile=null;
     if($("#fileInput")) $("#fileInput").value="";
     openModal(`<h3>✨ Pronto!</h3><p class="muted">Gerei <b>${qs.length} questões</b> e um resumo para <b>${esc(topicName)}</b> em ${esc(discName(disc))}. Já estão disponíveis em Quizzes e Resumos.</p><div class="row" style="margin-top:14px"><button class="btn primary" onclick="closeModal();setNav('quizzes')">Ir para os Quizzes</button><button class="btn ghost" onclick="closeModal()">Fechar</button></div>`);
   }catch(err){
