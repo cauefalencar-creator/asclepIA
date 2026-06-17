@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#b14bf0" />
 <title>asclepIA — Estudos em Medicina</title>
-<link rel="icon" href="icone.png" type="image/png" />
+<link rel="icon" href="icone_app.png" type="image/png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="asclepIA" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="application-name" content="asclepIA" />
-<link rel="apple-touch-icon" href="icone.png" />
+<link rel="apple-touch-icon" href="icone_app.png" />
 <style>
   :root{
     --ink:#1c1c28; --muted:#5d5d70; --line:rgba(255,255,255,.35);
@@ -203,7 +203,7 @@
   .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}
   .login-card{width:min(440px,100%);text-align:center}
   .login-logo{width:90px;height:90px;border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:var(--shadow-sm)}
-  .login-logo img{width:100%;height:100%;object-fit:contain}
+  .login-logo img{width:100%;height:100%;object-fit:cover}
   .profile-chip{margin-top:auto;padding-top:10px}
   .pchip-btn{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--line);cursor:pointer;background:rgba(255,255,255,.16);border-radius:14px;padding:8px 10px;color:#fff;text-align:left;transition:.16s}
   .pchip-btn:hover{background:rgba(255,255,255,.28)}
@@ -246,9 +246,9 @@
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <div class="logo"><img src="icone.png" alt="asclepIA"></div>
+      <div class="logo"><img src="icone_app.png" alt="asclepIA"></div>
       <div>
-        <img src="escrita.png" alt="asclepIA" style="height:42px;object-fit:contain;display:block;margin-bottom:2px">
+        <img src="escrita.png" alt="asclepIA" style="height:50px;object-fit:contain;display:block;margin-bottom:2px">
         <div class="tag">ESTUDOS EM MEDICINA</div>
       </div>
     </div>
@@ -289,7 +289,7 @@
       <button class="hamb" id="hamb" aria-label="menu">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3a1d52" stroke-width="2.4" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
-      <img src="escrita.png" alt="asclepIA" style="height:38px;object-fit:contain">
+      <img src="escrita.png" alt="asclepIA" style="height:44px;object-fit:contain">
     </div>
     <div id="view"></div>
   </main>
@@ -1106,8 +1106,8 @@ function boot(){
 function renderLogin(){
   const profs=getProfiles();
   view.innerHTML = `<div class="login-wrap"><div class="card login-card">
-    <div class="login-logo"><img src="icone.png" alt="asclepIA"></div>
-    <img src="escrita.png" alt="asclepIA" style="height:52px;object-fit:contain;margin:0 auto 10px;display:block">
+    <div class="login-logo"><img src="icone_app.png" alt="asclepIA"></div>
+    <img src="escrita_dark.png" alt="asclepIA" style="height:64px;object-fit:contain;margin:0 auto 10px;display:block">
     <p class="muted" style="margin-bottom:18px">${cloudEnabled()?"Entre com seu e-mail. Seu progresso é salvo na nuvem e segue você em qualquer aparelho.":"Entre com seu e-mail para acessar seus estudos. Cada perfil guarda o próprio progresso neste aparelho."}</p>
     ${profs.length?`<div class="field" style="text-align:left"><label>Perfis neste aparelho</label><div class="row">${profs.map(p=>`<button class="btn ghost sm" onclick="loginAs('${esc(p.email)}')">${esc(p.name||p.email)}</button>`).join("")}</div></div>`:""}
     <div class="field" style="text-align:left"><label>Nome (opcional)</label><input class="input" id="loginName" placeholder="Seu nome"></div>
@@ -1283,7 +1283,7 @@ function renderInicio(){
   view.innerHTML = `
   <div class="view">
     <div class="page-head">
-      <h1>Bem-vinda ao <img src="escrita.png" alt="asclepIA" style="height:42px;object-fit:contain;vertical-align:middle"> 👋</h1>
+      <h1>Bem-vinda ao <img src="escrita.png" alt="asclepIA" style="height:48px;object-fit:contain;vertical-align:middle"> 👋</h1>
       <p>Sua plataforma de estudos por flashcards e quizzes. Conteúdo gerado a partir das suas aulas de Semiologia. Escolha um caminho abaixo para começar.</p>
     </div>
     <div class="grid g-4 stats4" style="margin-bottom:18px">
