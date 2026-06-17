@@ -1860,9 +1860,9 @@ async function generateWithAI(){
     const tool={ name:"salvar_material", description:"Salva o resumo e as questões geradas.", input_schema:{type:"object",required:["summary","tips","questions"],properties:{
       summary:{type:"string"}, tips:{type:"string"},
       questions:{type:"array",items:{type:"object",required:["q","o","a","d","e"],properties:{
-        q:{type:"string"}, o:{type:"array",items:{type:"string"},minItems:4,maxItems:4}, a:{type:"integer",enum:[0,1,2,3]},
+        q:{type:"string"}, o:{type:"array",items:{type:"string"}}, a:{type:"integer",enum:[0,1,2,3]},
         d:{type:"string",enum:["facil","moderado","dificil"]}, e:{type:"string"} }}} }}};
-    const body={ model, max_tokens:8000, system:sys,
+    const body={ model, max_tokens:16000, system:sys,
       tools:[tool], tool_choice:{type:"tool",name:"salvar_material"},
       messages:[{role:"user",content:[docBlock,{type:"text",text:`Gere o resumo e ${n} questões a partir deste material.`}]}] };
     const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{
