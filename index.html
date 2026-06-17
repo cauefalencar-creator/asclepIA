@@ -1006,12 +1006,59 @@ const DEFAULT_TREE = [
   ]}
 ];
 
-/* ---------- Perfis + Estado persistente (sem servidor) ---------- */
+/* ---------- Perfis + Estado persistente ---------- */
 const OLD_KEY = "asclepia_state_v1";   // chave antiga (versão sem perfil)
 const PKEY = "asclepia_profiles_v1";   // lista de perfis deste aparelho
 const CKEY = "asclepia_current_v1";    // e-mail do perfil ativo
 const DOW = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 let state = null;
+
+/* ---------- Sincronização na nuvem (Supabase) ----------
+   Cole abaixo a URL do projeto e a chave anon public do Supabase.
+   Enquanto estiver vazio, o app funciona normal só neste aparelho. */
+const CLOUD = {
+  url: "",   // ex.: https://abcdefgh.supabase.co
+  key: ""    // chave anon public
+};
+let _cloudTimer = null;
+function cloudEnabled(){ return !!(CLOUD.url && CLOUD.key); }
+function cloudHeaders(){ return { "apikey":CLOUD.key, "Authorization":"Bearer "+CLOUD.key, "content-type":"application/json" }; }
+async function cloudPull(email){
+  if(!cloudEnabled()) return null;
+  try{
+    const r=await fetch(`${CLOUD.url}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=data,updated_ts`,{headers:cloudHeaders()});
+    if(!r.ok) return null;
+    const rows=await r.json();
+    if(rows && rows[0]) return rows[0];
+  }catch(e){}
+  return null;
+}
+async function cloudPush(email, data, ts){
+  if(!cloudEnabled()) return;
+  try{
+    await fetch(`${CLOUD.url}/rest/v1/profiles`,{method:"POST",
+      headers:Object.assign(cloudHeaders(),{Prefer:"resolution=merge-duplicates,return=minimal"}),
+      body:JSON.stringify({email:String(email).toLowerCase(), data, updated_ts:ts})});
+  }catch(e){}
+}
+async function syncFromCloud(){
+  const e=currentEmail(); if(!e||!cloudEnabled()) return;
+  const row=await cloudPull(e);
+  const localTs = (state && state._ts) ? state._ts : 0;
+  if(row && row.data){
+    const cloudTs = row.updated_ts || 0;
+    if(cloudTs > localTs){
+      state = migrate(row.data); state._ts = cloudTs;
+      try{ localStorage.setItem(dataKey(e), JSON.stringify(state)); }catch(_){}
+      render(); updateProfileChip();
+      toast("Dados sincronizados ☁️");
+    } else if(localTs > cloudTs){
+      cloudPush(e, state, localTs);
+    }
+  } else if(state){
+    cloudPush(e, state, localTs||Date.now());
+  }
+}
 
 function dataKey(email){ return "asclepia_data_"+String(email).trim().toLowerCase(); }
 function getProfiles(){ try{ return JSON.parse(localStorage.getItem(PKEY))||[]; }catch(e){ return []; } }
@@ -1034,7 +1081,8 @@ function migrate(s){
   s.sessions.forEach(se=>{ if(!se.id) se.id=uid("sess"); });
   return s;
 }
-function save(){ const e=currentEmail(); if(!e||!state) return; try{ localStorage.setItem(dataKey(e), JSON.stringify(state)); }catch(err){ toast("Não foi possível salvar (armazenamento cheio)."); } }
+function save(){ const e=currentEmail(); if(!e||!state) return; state._ts=Date.now(); try{ localStorage.setItem(dataKey(e), JSON.stringify(state)); }catch(err){ toast("Não foi possível salvar (armazenamento cheio)."); }
+  if(cloudEnabled()){ clearTimeout(_cloudTimer); _cloudTimer=setTimeout(()=>cloudPush(e, state, state._ts), 1200); } }
 
 /* --- Login / perfis (sem senha, sem servidor) --- */
 function boot(){
@@ -1046,19 +1094,20 @@ function boot(){
   updateProfileChip();
   document.querySelectorAll("[data-nav]").forEach(b=> b.classList.toggle("active", b.dataset.nav===nav));
   render();
+  syncFromCloud();
 }
 function renderLogin(){
   const profs=getProfiles();
   view.innerHTML = `<div class="login-wrap"><div class="card login-card">
     <div class="login-logo">A</div>
     <h1 style="font-size:27px;margin-bottom:2px">asclep<span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">IA</span></h1>
-    <p class="muted" style="margin-bottom:18px">Entre com seu e-mail para acessar seus estudos. Cada perfil guarda o próprio progresso neste aparelho.</p>
+    <p class="muted" style="margin-bottom:18px">${cloudEnabled()?"Entre com seu e-mail. Seu progresso é salvo na nuvem e segue você em qualquer aparelho.":"Entre com seu e-mail para acessar seus estudos. Cada perfil guarda o próprio progresso neste aparelho."}</p>
     ${profs.length?`<div class="field" style="text-align:left"><label>Perfis neste aparelho</label><div class="row">${profs.map(p=>`<button class="btn ghost sm" onclick="loginAs('${esc(p.email)}')">${esc(p.name||p.email)}</button>`).join("")}</div></div>`:""}
     <div class="field" style="text-align:left"><label>Nome (opcional)</label><input class="input" id="loginName" placeholder="Seu nome"></div>
     <div class="field" style="text-align:left"><label>E-mail</label><input class="input" id="loginEmail" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="btn primary" style="width:100%" onclick="doLogin()">Entrar / criar perfil</button>
     <button class="btn ghost sm" style="margin-top:10px" onclick="openImport()">Tenho um backup — importar dados</button>
-    <p class="muted" style="font-size:11.5px;margin-top:16px">Sem senha e sem servidor: os dados ficam só neste aparelho. Para usar seu perfil em outro celular/PC, use Exportar e Importar dados.</p>
+    <p class="muted" style="font-size:11.5px;margin-top:16px">${cloudEnabled()?"Sem senha: qualquer pessoa com o e-mail acessa este perfil. Os dados sincronizam automaticamente entre os aparelhos.":"Sem senha e sem servidor: os dados ficam só neste aparelho. Para usar seu perfil em outro celular/PC, use Exportar e Importar dados."}</p>
   </div></div>`;
 }
 function doLogin(){
