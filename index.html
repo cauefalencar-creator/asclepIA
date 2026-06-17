@@ -248,7 +248,7 @@
     <div class="brand">
       <div class="logo"><img src="icone.png" alt="asclepIA"></div>
       <div>
-        <div class="name">asclep<b>IA</b></div>
+        <img src="escrita.png" alt="asclepIA" style="height:22px;object-fit:contain;display:block;margin-bottom:2px">
         <div class="tag">ESTUDOS EM MEDICINA</div>
       </div>
     </div>
@@ -1107,7 +1107,7 @@ function renderLogin(){
   const profs=getProfiles();
   view.innerHTML = `<div class="login-wrap"><div class="card login-card">
     <div class="login-logo"><img src="icone.png" alt="asclepIA"></div>
-    <h1 style="font-size:27px;margin-bottom:2px">asclep<span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">IA</span></h1>
+    <img src="escrita.png" alt="asclepIA" style="height:36px;object-fit:contain;margin:0 auto 6px;display:block">
     <p class="muted" style="margin-bottom:18px">${cloudEnabled()?"Entre com seu e-mail. Seu progresso é salvo na nuvem e segue você em qualquer aparelho.":"Entre com seu e-mail para acessar seus estudos. Cada perfil guarda o próprio progresso neste aparelho."}</p>
     ${profs.length?`<div class="field" style="text-align:left"><label>Perfis neste aparelho</label><div class="row">${profs.map(p=>`<button class="btn ghost sm" onclick="loginAs('${esc(p.email)}')">${esc(p.name||p.email)}</button>`).join("")}</div></div>`:""}
     <div class="field" style="text-align:left"><label>Nome (opcional)</label><input class="input" id="loginName" placeholder="Seu nome"></div>
