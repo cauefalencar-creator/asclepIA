@@ -1320,7 +1320,7 @@ function saveProfiles(p){ try{ localStorage.setItem(PKEY, JSON.stringify(p)); }c
 function currentEmail(){ return localStorage.getItem(CKEY); }
 function setCurrent(email){ if(email) localStorage.setItem(CKEY, String(email).toLowerCase()); else localStorage.removeItem(CKEY); }
 function currentProfile(){ const e=currentEmail(); return getProfiles().find(p=>p.email===e)||null; }
-function freshState(){ return { tree:JSON.parse(JSON.stringify(DEFAULT_TREE)), custom:{disciplines:{},topics:{}}, attempts:[], sessions:[], seen:{}, documents:[], lastStudied:{} }; }
+function freshState(){ return { tree:JSON.parse(JSON.stringify(DEFAULT_TREE)), custom:{disciplines:{},topics:{}}, attempts:[], sessions:[], seen:{}, documents:[], lastStudied:{}, resumeQ:null }; }
 
 function load(){
   const e=currentEmail(); if(!e) return null;
@@ -1331,7 +1331,7 @@ function migrate(s){
   s.tree = s.tree || JSON.parse(JSON.stringify(DEFAULT_TREE));
   s.custom = s.custom || {disciplines:{},topics:{}};
   s.attempts = s.attempts||[]; s.sessions = s.sessions||[]; s.seen = s.seen||{}; s.documents = s.documents||[];
-  s.lastStudied = s.lastStudied||{};
+  s.lastStudied = s.lastStudied||{}; s.resumeQ = s.resumeQ||null;
   s.sessions.forEach(se=>{ if(!se.id) se.id=uid("sess"); });
   return s;
 }
@@ -1584,6 +1584,7 @@ function browseCrumbs(mode){
   return `<div class="crumbs">${c.join("")}</div>`;
 }
 
+function backBtn(onclick){ return `<button class="btn ghost sm" style="margin-bottom:12px" onclick="${onclick}">← Voltar</button>`; }
 function renderBrowse(mode){
   // nível 0: ciclos
   if(!route.cyc){
@@ -1594,7 +1595,7 @@ function renderBrowse(mode){
   // nível 1: anos
   if(!route.year){
     const tiles = cyc.years.map(y=>tile(y.name, y.disciplines.length+" disciplina(s)", "📅", `route={cyc:'${route.cyc}',year:'${y.id}'};render()`, null, false, menuBtn(`askDelete('year','${cyc.id}|${y.id}','${esc(y.name)}')`))).join("");
-    return `<div class="tilegrid">${tiles}${addTile("Novo ano", `openCreate('year','${cyc.id}')`)}</div>`;
+    return backBtn("route={};render()") + `<div class="tilegrid">${tiles}${addTile("Novo ano", `openCreate('year','${cyc.id}')`)}</div>`;
   }
   const year = cyc.years.find(x=>x.id===route.year);
   // nível 2: disciplinas
@@ -1603,7 +1604,7 @@ function renderBrowse(mode){
       const tops = Object.keys(getTopics(did)).length;
       return tile(discName(did), tops?tops+" aula(s)":"vazio — adicione materiais", "📚", `route={cyc:'${route.cyc}',year:'${route.year}',disc:'${did}'};render()`, null, false, menuBtn(`askDelete('disc','${route.cyc}|${route.year}|${did}','${esc(discName(did))}')`))
     }).join("");
-    return `<div class="tilegrid">${tiles}${addTile("Nova disciplina", `openCreate('disc','${cyc.id}|${year.id}')`)}</div>`;
+    return backBtn(`route={cyc:'${route.cyc}'};render()`) + `<div class="tilegrid">${tiles}${addTile("Nova disciplina", `openCreate('disc','${cyc.id}|${year.id}')`)}</div>`;
   }
   // nível 3: tópicos
   const tops = getTopics(route.disc);
@@ -1622,6 +1623,7 @@ function renderBrowse(mode){
     }
   }).join("");
   if(!ids.length) tiles = `<div class="empty card">Nenhum material nesta disciplina ainda.<br>Vá em <b>Envio de documentos</b> para adicionar.</div>`;
+  const back = backBtn(`route={cyc:'${route.cyc}',year:'${route.year}'};render()`);
   let agg="";
   if(mode==="quizzes" && ids.length){
     const total = ids.reduce((n,tid)=>n+((tops[tid].questions||[]).length),0);
@@ -1631,7 +1633,7 @@ function renderBrowse(mode){
       agg = `<button class="tile ${today?'today':''}" onclick="startSetup('${route.disc}','__all__')" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:14px"><div class="ico" style="font-size:24px">🎲</div><div style="min-width:0"><div class="ttl">Quiz da matéria inteira</div><div class="sub">${esc(subA)}</div></div></button>`;
     }
   }
-  return `<div class="tilegrid">${agg}${tiles}${addTile("Nova aula/tópico", `openCreate('topic','${route.disc}')`)}</div>`;
+  return back + `<div class="tilegrid">${agg}${tiles}${addTile("Nova aula/tópico", `openCreate('topic','${route.disc}')`)}</div>`;
 }
 function tile(ttl,sub,ico,onclick,badge,locked,deleteBtn){
   return `<div class="tile-wrap"><button class="tile ${locked?'locked':''}" onclick="${onclick}">
@@ -1695,8 +1697,9 @@ function renderSetup(){
         <select class="input" id="qcount"></select>
         <span class="muted" style="font-size:12.5px">Sorteadas aleatoriamente do banco da aula — a cada estudo, um novo sorteio (prioriza as que você ainda não viu).</span>
       </div>
+      ${(()=>{ const r=state.resumeQ; if(r&&r.disc===route.disc&&r.top===route.top){ const done=r.items.filter(x=>x.resolved).length; const total=r.items.length; return `<div class="explain" style="margin-top:14px;margin-bottom:0"><b>📌 Estudo em andamento:</b> ${done} de ${total} questões respondidas.<div class="row" style="margin-top:10px"><button class="btn primary" onclick="restoreResume()">▶ Continuar onde parei</button><button class="btn ghost" onclick="clearResume();renderSetup()">Começar do zero</button></div></div>`; } return ''; })()}
       <div class="row" style="margin-top:8px">
-        <button class="btn primary" onclick="beginQuiz()">▶ Iniciar estudo</button>
+        <button class="btn primary" onclick="${(()=>{ const r=state.resumeQ; return (r&&r.disc===route.disc&&r.top===route.top)?'restoreResume()':'beginQuiz()'; })()}">▶ ${(()=>{ const r=state.resumeQ; return (r&&r.disc===route.disc&&r.top===route.top)?'Continuar estudo':'Iniciar estudo'; })()}</button>
         <button class="btn ghost" onclick="route={cyc:'ciclo-basico',year:'ano-2',disc:'${route.disc}'};setNav('quizzes')">Cancelar</button>
       </div>
       ${tips?`<div class="explain" style="margin-top:18px"><b>Dica de estudo:</b> ${esc(tips)}</div>`:""}
@@ -1775,23 +1778,45 @@ function renderQuestion(){
 function isLast(){ // última pendente?
   return Q.items.every((x,i)=> i===Q.idx ? true : x.resolved);
 }
+function saveResume(){
+  if(!Q) return;
+  state.resumeQ = {
+    disc:Q.disc, top:Q.top, level:Q.level, idx:Q.idx, started:Q.started, sid:Q.sid,
+    items:Q.items.map(it=>({qid:it.q.id, order:it.order, picks:it.picks.slice(), resolved:it.resolved, firstTry:it.firstTry, skipped:it.skipped}))
+  };
+  save();
+}
+function clearResume(){ state.resumeQ=null; save(); }
+function restoreResume(){
+  const s = state.resumeQ;
+  if(!s) return false;
+  const pool = getQuizPool(s.disc, s.top);
+  const qmap = {};
+  pool.forEach(q=>{ qmap[q.id]=q; });
+  const items = s.items.map(it=>({q:qmap[it.qid], order:it.order, picks:it.picks, resolved:it.resolved, firstTry:it.firstTry, skipped:it.skipped})).filter(it=>it.q);
+  if(!items.length) return false;
+  Q = { sid:s.sid, disc:s.disc, top:s.top, level:s.level, items, idx:s.idx, started:s.started };
+  route.mode="play";
+  renderQuestion();
+  window.scrollTo(0,0);
+  return true;
+}
 function pick(oi){
   const it = Q.items[Q.idx];
   if(it.resolved) return;
   if(it.picks.includes(oi)) return;
   const correct = oi===it.q.a;
-  if(it.firstTry===null) it.firstTry = correct; // 1ª tentativa
+  if(it.firstTry===null) it.firstTry = correct;
   it.picks.push(oi);
   if(correct){
     it.resolved = true;
-    // registra tentativa (1x por questão)
     state.attempts.push({ts:Date.now(), sid:Q.sid, disc:Q.disc, top:Q.top, qid:it.q.id, d:it.q.d, first:it.firstTry, tries:it.picks.length});
     state.seen[it.q.id] = (state.seen[it.q.id]||0)+1;
-    save();
   }
+  saveResume();
   renderQuestion();
 }
-function prevQ(){ if(Q.idx>0){ Q.idx--; renderQuestion(); } }
+function prevQ(){ if(Q.idx>0){ Q.idx--; saveResume(); renderQuestion(); } }
 function nextQ(){
   // procura próxima não resolvida (inclui puladas) a partir do índice atual
   const it=Q.items[Q.idx];
@@ -1821,7 +1846,7 @@ function endQuiz(){
   const details = Q.items.map(x=>({qid:x.q.id, q:x.q.q, o:x.q.o.slice(), a:x.q.a, e:x.q.e, d:x.q.d, picks:x.picks.slice(), resolved:x.resolved, firstTry:x.firstTry, skipped:x.skipped}));
   state.sessions.push({id:Q.sid, ts:Date.now(), disc:Q.disc, top:Q.top, level:Q.level, total:Q.items.length, resolved:resolved.length, correctFirst, durationMs, details});
   state.lastStudied = state.lastStudied||{}; state.lastStudied[Q.disc+"|"+Q.top]=Date.now();
-  save();
+  clearResume();
   renderReport(correctFirst, resolved.length);
 }
 function renderReport(correctFirst, resolvedN){
