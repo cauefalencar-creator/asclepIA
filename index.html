@@ -1758,7 +1758,7 @@ function renderQuestion(){
     <div class="qprog"><i style="width:${pct(answeredCount,total)}%"></i></div>
     <div class="qmeta" style="margin-top:6px"><span class="pill ${it.q.d}">${({facil:"Fácil",moderado:"Moderado",dificil:"Difícil"})[it.q.d]}</span><span>${answeredCount} resolvida(s)</span></div>
     <div class="card qcard">
-      <div class="qtext">${esc(it.q.q)}</div>
+      <div class="qtext">${it.q.q.trimStart().startsWith('<') ? it.q.q : esc(it.q.q)}</div>
       <div class="opts">${opts}</div>
       ${it.resolved?`<div class="explain"><b>Explicação:</b> ${esc(it.q.e)}</div>`:""}
       <div class="qbar">
