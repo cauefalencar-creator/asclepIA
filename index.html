@@ -179,6 +179,9 @@
   .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
   .field label{font-size:13px;font-weight:700;color:var(--ink)}
   .input,select.input{width:100%;padding:12px 14px;border-radius:13px;border:1.5px solid rgba(0,0,0,.1);background:rgba(255,255,255,.85);font-size:15px;font-family:inherit}
+  .topic-search{width:100%;padding:10px 14px 10px 38px;border-radius:12px;border:1.5px solid rgba(0,0,0,.1);background:rgba(255,255,255,.9) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 12px center;font-size:15px;font-family:inherit;box-sizing:border-box;margin-bottom:12px;outline:none;transition:border-color .2s}
+  .topic-search:focus{border-color:#b14bf0}
+  .topic-no-results{text-align:center;color:#aaa;padding:32px 16px;font-size:14px}
   .input:focus{outline:none;border-color:rgba(177,75,240,.6)}
   .modal-bg{position:fixed;inset:0;background:rgba(30,12,45,.45);backdrop-filter:blur(4px);display:none;place-items:center;z-index:50;padding:18px}
   .modal-bg.show{display:grid;animation:fade .2s}
@@ -1606,6 +1609,18 @@ function browseCrumbs(mode){
 }
 
 function backBtn(onclick){ return `<button class="btn ghost sm" style="margin-bottom:12px" onclick="${onclick}">← Voltar</button>`; }
+function filterTopics(q){
+  const v=q.trim().toLowerCase();
+  let any=false;
+  document.querySelectorAll('#topic-grid .tile-wrap').forEach(el=>{
+    const name=(el.querySelector('.ttl')||el).textContent.toLowerCase();
+    const show=!v||name.includes(v);
+    el.style.display=show?'':'none';
+    if(show) any=true;
+  });
+  const nr=document.getElementById('topic-no-results');
+  if(nr) nr.style.display=any||!v?'none':'';
+}
 function renderBrowse(mode){
   // nível 0: ciclos
   if(!route.cyc){
@@ -1654,7 +1669,8 @@ function renderBrowse(mode){
       agg = `<button class="tile ${today?'today':''}" onclick="startSetup('${route.disc}','__all__')" style="grid-column:1/-1;flex-direction:row;align-items:center;gap:14px"><div class="ico" style="font-size:24px">🎲</div><div style="min-width:0"><div class="ttl">Quiz da matéria inteira</div><div class="sub">${esc(subA)}</div></div></button>`;
     }
   }
-  return back + `<div class="tilegrid">${agg}${tiles}${addTile("Nova aula/tópico", `openCreate('topic','${route.disc}')`)}</div>`;
+  const searchBar = ids.length>4 ? `<input class="topic-search" type="search" placeholder="Buscar tópico..." oninput="filterTopics(this.value)" autocomplete="off" />` : '';
+  return back + searchBar + `<div id="topic-grid" class="tilegrid">${agg}${tiles}${addTile("Nova aula/tópico", `openCreate('topic','${route.disc}')`)}</div><div id="topic-no-results" style="display:none" class="topic-no-results">Nenhum tópico encontrado.</div>`;
 }
 function tile(ttl,sub,ico,onclick,badge,locked,deleteBtn){
   return `<div class="tile-wrap"><button class="tile ${locked?'locked':''}" onclick="${onclick}">
