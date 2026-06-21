@@ -1680,7 +1680,7 @@ function openResumo(discId, topId){
 /* ============================================================
    Setup do quiz (nível + nº de questões)
    ============================================================ */
-function startSetup(discId, topId){ route={mode:"setup",disc:discId,top:topId,level:"todos"}; renderSetup(); window.scrollTo(0,0); }
+function startSetup(discId, topId){ const cyc=route.cyc||'ciclo-basico'; const year=route.year||'ano-2'; route={mode:"setup",disc:discId,top:topId,level:"todos",cyc,year}; renderSetup(); window.scrollTo(0,0); }
 function renderSetup(){
   const qs = getQuizPool(route.disc, route.top);
   const name = getQuizName(route.disc, route.top);
@@ -1688,8 +1688,9 @@ function renderSetup(){
   const counts = {todos:qs.length, facil:qs.filter(q=>q.d==="facil").length, moderado:qs.filter(q=>q.d==="moderado").length, dificil:qs.filter(q=>q.d==="dificil").length};
   const lvlBtn = (k,label)=>`<button class="btn ${route.level===k?'primary':'ghost'} sm" onclick="route.level='${k}';renderSetup()" ${counts[k]?'':'disabled'}>${label} <span class="pill ghost" style="margin-left:4px">${counts[k]}</span></button>`;
   view.innerHTML = `<div class="view">
-    <div class="crumbs"><button onclick="route={cyc:'ciclo-basico',year:'ano-2',disc:'${route.disc}'};setNav('quizzes')">← Quizzes</button><span class="sep">›</span><button>${esc(discName(route.disc))}</button></div>
+    <div class="crumbs"><button onclick="nav='quizzes';route={cyc:'${route.cyc}',year:'${route.year}',disc:'${route.disc}'};render()">← Quizzes</button><span class="sep">›</span><button>${esc(discName(route.disc))}</button></div>
     <div class="card quizwrap">
+      <button class="btn ghost sm" style="margin-bottom:12px" onclick="nav='quizzes';route={cyc:'${route.cyc}',year:'${route.year}',disc:'${route.disc}'};render()">← Voltar</button>
       <h2 style="margin-bottom:4px">${esc(name)}</h2>
       <p class="muted">Escolha o nível de dificuldade. As questões aparecem em ordem aleatória; a cada estudo, um novo sorteio.</p>
       <div class="field"><label>Nível</label><div class="row">${lvlBtn("todos","Todos")}${lvlBtn("facil","Fácil")}${lvlBtn("moderado","Moderado")}${lvlBtn("dificil","Difícil")}</div></div>
@@ -1700,7 +1701,7 @@ function renderSetup(){
       ${(()=>{ const r=state.resumeQ; if(r&&r.disc===route.disc&&r.top===route.top){ const done=r.items.filter(x=>x.resolved).length; const total=r.items.length; return `<div class="explain" style="margin-top:14px;margin-bottom:0"><b>📌 Estudo em andamento:</b> ${done} de ${total} questões respondidas.<div class="row" style="margin-top:10px"><button class="btn primary" onclick="restoreResume()">▶ Continuar onde parei</button><button class="btn ghost" onclick="clearResume();renderSetup()">Começar do zero</button></div></div>`; } return ''; })()}
       <div class="row" style="margin-top:8px">
         <button class="btn primary" onclick="${(()=>{ const r=state.resumeQ; return (r&&r.disc===route.disc&&r.top===route.top)?'restoreResume()':'beginQuiz()'; })()}">▶ ${(()=>{ const r=state.resumeQ; return (r&&r.disc===route.disc&&r.top===route.top)?'Continuar estudo':'Iniciar estudo'; })()}</button>
-        <button class="btn ghost" onclick="route={cyc:'ciclo-basico',year:'ano-2',disc:'${route.disc}'};setNav('quizzes')">Cancelar</button>
+        <button class="btn ghost" onclick="nav='quizzes';route={cyc:'${route.cyc}',year:'${route.year}',disc:'${route.disc}'};render()">← Voltar</button>
       </div>
       ${tips?`<div class="explain" style="margin-top:18px"><b>Dica de estudo:</b> ${esc(tips)}</div>`:""}
     </div>
@@ -1728,7 +1729,7 @@ function beginQuiz(){
   let chosen = shuffle(pool.slice(0, Math.min(n, pool.length)));
   Q = {
     sid:uid("sess"),
-    disc:route.disc, top:route.top, level:route.level,
+    disc:route.disc, top:route.top, level:route.level, cyc:route.cyc, year:route.year,
     items: chosen.map(q=>({q, order:shuffle(q.o.map((_,i)=>i)), picks:[], resolved:false, firstTry:null, skipped:false})),
     idx:0, started:Date.now()
   };
@@ -1765,6 +1766,7 @@ function renderQuestion(){
       <div class="opts">${opts}</div>
       ${it.resolved?`<div class="explain"><b>Explicação:</b> ${esc(it.q.e)}</div>`:""}
       <div class="qbar">
+        <button class="btn ghost sm" onclick="nav='quizzes';route={cyc:Q.cyc,year:Q.year,disc:Q.disc};render()">← Aulas</button>
         <button class="btn ghost sm" onclick="prevQ()" ${Q.idx===0?'disabled':''}>← Anterior</button>
         <button class="btn ghost sm" onclick="skipQ()" ${it.resolved?'disabled':''}>↦ Pular</button>
         <div class="spacer"></div>
